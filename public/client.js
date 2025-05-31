@@ -51,7 +51,7 @@ function startApp() {
   userListDiv.style.display = "block";
 
   // Connect Socket.IO
-  socket = io("http://localhost:3000");
+  socket = io("https://agrivr.onrender.com");
 
   socket.on('connect', () => {
     console.log('Socket connected');
