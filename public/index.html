@@ -16,17 +16,17 @@
       z-index: 1000;
       flex-direction: column;
     }
-    #nameModal input {
+    #nameModal input, #uploadModal input {
       padding: 10px; font-size: 16px; margin-bottom: 10px;
       border-radius: 5px; border: none;
     }
-    #nameModal button {
+    #nameModal button, #uploadModal button {
       padding: 10px 20px; font-size: 16px;
       background: #4ECDC4; color: white;
       border: none; border-radius: 5px;
       cursor: pointer;
     }
-    #nameModal button:hover {
+    #nameModal button:hover, #uploadModal button:hover {
       background: #45B7D1;
     }
     #chat {
@@ -67,6 +67,18 @@
       padding: 3px 0;
       border-bottom: 1px solid #333;
     }
+
+    #uploadModal {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
   </style>
 </head>
 <body>
@@ -84,6 +96,12 @@
   <div id="userList" style="display:none;">
     <strong>🌾 Farmers Online:</strong>
     <ul id="users"></ul>
+  </div>
+
+  <!-- Upload Modal for Images -->
+  <div id="uploadModal">
+    <input type="file" id="imageUpload" accept="image/*" />
+    <button onclick="closeUpload()">Cancel</button>
   </div>
 
   <a-scene background="color: #87CEEB" vr-mode-ui="enabled: true">
@@ -163,6 +181,33 @@
     <a-cylinder position="0 0.5 -8" radius="1" height="1" color="#654321" shadow="cast: true"></a-cylinder>
     <a-cylinder position="0 1.5 -8" radius="0.8" height="0.2" color="#333" shadow="cast: true"></a-cylinder>
 
+    <!-- INTERACTIVE BOARDS -->
+    <a-image 
+      id="board1" 
+      src="" 
+      position="0 2 -5" 
+      width="4" 
+      height="2.5" 
+      color="#fff"
+      material="shader: flat; side: double;" 
+      class="clickable"
+      event-set__enter="_event: mouseenter; scale: 1.1 1.1 1"
+      event-set__leave="_event: mouseleave; scale: 1 1 1">
+    </a-image>
+
+    <a-image 
+      id="board2" 
+      src="" 
+      position="6 2 -5" 
+      width="4" 
+      height="2.5" 
+      color="#fff"
+      material="shader: flat; side: double;" 
+      class="clickable"
+      event-set__enter="_event: mouseenter; scale: 1.1 1.1 1"
+      event-set__leave="_event: mouseleave; scale: 1 1 1">
+    </a-image>
+
     <!-- Player camera rig with movement -->
     <a-entity id="cameraRig" position="0 1.6 3">
       <a-camera 
@@ -184,6 +229,46 @@
     <a-sphere position="-25 10 15" radius="4" color="#FFFFFF" opacity="0.7"></a-sphere>
     <a-sphere position="-22 10 17" radius="3" color="#FFFFFF" opacity="0.7"></a-sphere>
   </a-scene>
+
+  <script>
+    let selectedBoard = null;
+
+    // Join logic
+    document.getElementById("joinBtn").addEventListener("click", () => {
+      const name = document.getElementById("username").value;
+      if (name.trim() === "") return;
+      document.getElementById("nameModal").style.display = "none";
+      document.getElementById("chat").style.display = "block";
+      document.getElementById("userList").style.display = "block";
+    });
+
+    // Open upload modal on board click
+    document.querySelectorAll('.clickable').forEach(board => {
+      board.addEventListener('click', () => {
+        selectedBoard = board;
+        document.getElementById('uploadModal').style.display = 'flex';
+      });
+    });
+
+    // Upload image to board
+    document.getElementById('imageUpload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file || !selectedBoard) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        selectedBoard.setAttribute('src', evt.target.result);
+        closeUpload();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function closeUpload() {
+      document.getElementById('uploadModal').style.display = 'none';
+      document.getElementById('imageUpload').value = '';
+      selectedBoard = null;
+    }
+  </script>
 
   <script src="client.js"></script>
 </body>
