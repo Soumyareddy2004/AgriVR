@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Immersive Farm World</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #nameModal {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+      flex-direction: column;
+    }
+    #nameModal input {
+      padding: 10px; font-size: 16px; margin-bottom: 10px;
+      border-radius: 5px; border: none;
+    }
+    #nameModal button {
+      padding: 10px 20px; font-size: 16px;
+      background: #4ECDC4; color: white;
+      border: none; border-radius: 5px;
+      cursor: pointer;
+    }
+    #nameModal button:hover {
+      background: #45B7D1;
+    }
+    #chat {
+      position: absolute; bottom: 10px; left: 10px;
+      width: 300px; max-height: 200px;
+      background: rgba(0,0,0,0.9);
+      color: white; overflow-y: auto;
+      font-family: sans-serif; font-size: 14px;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      z-index: 100;
+    }
+    #chat input {
+      width: 100%; padding: 5px;
+      box-sizing: border-box;
+      border-radius: 3px; border: none;
+      margin-top: 5px;
+    }
+    #userList {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.9);
+      color: white; padding: 15px;
+      font-family: sans-serif; font-size: 14px;
+      max-width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      border-radius: 8px;
+      z-index: 100;
+    }
+    #userList ul {
+      list-style: none;
+      padding: 0;
+      margin: 5px 0 0 0;
+    }
+    #userList li {
+      padding: 3px 0;
+      border-bottom: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="nameModal">
+    <h2 style="color: white; margin-bottom: 20px;">Welcome to Immersive Farm World</h2>
+    <input type="text" id="username" placeholder="Enter your name" />
+    <button id="joinBtn">Join the Farm</button>
+  </div>
+
+  <div id="chat" style="display:none;">
+    <div id="messages"></div>
+    <input id="chatInput" placeholder="Type a message..." />
+  </div>
+
+  <div id="userList" style="display:none;">
+    <strong>🌾 Farmers Online:</strong>
+    <ul id="users"></ul>
+  </div>
+
+  <a-scene background="color: #87CEEB" vr-mode-ui="enabled: true">
+    <!-- Lighting -->
+    <a-light type="ambient" color="#404040" intensity="0.6"></a-light>
+    <a-light type="directional" position="-1 2 1" color="#ffffff" intensity="0.8" shadow="cast: true"></a-light>
+
+    <!-- Ground with texture -->
+    <a-plane 
+      position="0 0 0" 
+      rotation="-90 0 0" 
+      width="50" 
+      height="50" 
+      color="#228B22"
+      shadow="receive: true">
+    </a-plane>
+
+    <!-- Farm Environment -->
+    <!-- Barn -->
+    <a-box 
+      position="10 2 -10" 
+      scale="4 4 6" 
+      color="#8B4513"
+      shadow="cast: true">
+    </a-box>
+    <!-- Barn roof -->
+    <a-box 
+      position="10 4.5 -10" 
+      scale="5 1 7" 
+      color="#654321"
+      shadow="cast: true">
+    </a-box>
+
+    <!-- Farm fence -->
+    <a-box position="15 0.5 0" scale="0.2 1 30" color="#8B4513" shadow="cast: true"></a-box>
+    <a-box position="-15 0.5 0" scale="0.2 1 30" color="#8B4513" shadow="cast: true"></a-box>
+    <a-box position="0 0.5 15" scale="30 1 0.2" color="#8B4513" shadow="cast: true"></a-box>
+    <a-box position="0 0.5 -15" scale="30 1 0.2" color="#8B4513" shadow="cast: true"></a-box>
+
+    <!-- Trees -->
+    <a-cylinder position="8 1 8" radius="0.5" height="2" color="#8B4513" shadow="cast: true"></a-cylinder>
+    <a-sphere position="8 3 8" radius="2" color="#228B22" shadow="cast: true"></a-sphere>
+    
+    <a-cylinder position="-8 1 8" radius="0.5" height="2" color="#8B4513" shadow="cast: true"></a-cylinder>
+    <a-sphere position="-8 3 8" radius="2" color="#228B22" shadow="cast: true"></a-sphere>
+    
+    <a-cylinder position="12 1 5" radius="0.4" height="3" color="#8B4513" shadow="cast: true"></a-cylinder>
+    <a-sphere position="12 3.5 5" radius="1.5" color="#228B22" shadow="cast: true"></a-sphere>
+
+    <!-- Farm plots -->
+    <a-plane position="5 0.01 5" rotation="-90 0 0" width="4" height="4" color="#654321"></a-plane>
+    <a-plane position="-5 0.01 5" rotation="-90 0 0" width="4" height="4" color="#654321"></a-plane>
+    <a-plane position="5 0.01 -5" rotation="-90 0 0" width="4" height="4" color="#654321"></a-plane>
+    <a-plane position="-5 0.01 -5" rotation="-90 0 0" width="4" height="4" color="#654321"></a-plane>
+
+    <!-- Crops (vegetables) -->
+    <!-- Plot 1 -->
+    <a-box position="4.5 0.2 4.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5 0.2 4.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5.5 0.2 4.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="4.5 0.2 5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5 0.2 5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5.5 0.2 5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="4.5 0.2 5.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5 0.2 5.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+    <a-box position="5.5 0.2 5.5" scale="0.2 0.4 0.2" color="#90EE90"></a-box>
+
+    <!-- Plot 2 - Different crops -->
+    <a-sphere position="-4.5 0.2 4.5" radius="0.15" color="#FF6347"></a-sphere>
+    <a-sphere position="-5 0.2 4.5" radius="0.15" color="#FF6347"></a-sphere>
+    <a-sphere position="-5.5 0.2 4.5" radius="0.15" color="#FF6347"></a-sphere>
+    <a-sphere position="-4.5 0.2 5" radius="0.15" color="#FF6347"></a-sphere>
+    <a-sphere position="-5 0.2 5" radius="0.15" color="#FF6347"></a-sphere>
+    <a-sphere position="-5.5 0.2 5" radius="0.15" color="#FF6347"></a-sphere>
+
+    <!-- Water well -->
+    <a-cylinder position="0 0.5 -8" radius="1" height="1" color="#654321" shadow="cast: true"></a-cylinder>
+    <a-cylinder position="0 1.5 -8" radius="0.8" height="0.2" color="#333" shadow="cast: true"></a-cylinder>
+
+    <!-- Player camera rig with movement -->
+    <a-entity id="cameraRig" position="0 1.6 3">
+      <a-camera 
+        id="playerCamera"
+        wasd-controls="acceleration: 20; fly: false" 
+        look-controls="pointerLockEnabled: true"
+        cursor="rayOrigin: mouse">
+      </a-camera>
+    </a-entity>
+
+    <!-- Sky with clouds -->
+    <a-sky color="#87CEEB"></a-sky>
+    
+    <!-- Some floating clouds -->
+    <a-sphere position="20 8 -20" radius="3" color="#FFFFFF" opacity="0.8"></a-sphere>
+    <a-sphere position="18 8 -18" radius="2" color="#FFFFFF" opacity="0.8"></a-sphere>
+    <a-sphere position="22 8 -22" radius="2.5" color="#FFFFFF" opacity="0.8"></a-sphere>
+    
+    <a-sphere position="-25 10 15" radius="4" color="#FFFFFF" opacity="0.7"></a-sphere>
+    <a-sphere position="-22 10 17" radius="3" color="#FFFFFF" opacity="0.7"></a-sphere>
+  </a-scene>
+
+  <script src="client.js"></script>
+</body>
+</html>
